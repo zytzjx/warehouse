@@ -1,0 +1,291 @@
+<html lang="en">
+
+<head>
+    <link href="https://unpkg.com/layui@2.9.13/dist/css/layui.css" rel="stylesheet">
+    <script src="https://unpkg.com/layui@2.9.13/dist/layui.js"></script>
+
+    <link href="https://unpkg.com/tabulator-tables/dist/css/tabulator.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/luxon/build/global/luxon.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <!--xlsx js lib-->
+    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+    <!--pdf js lib-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
+</head>
+
+<body class="layui-padding-3">
+    <h1>Barcode Generator</h1>
+    <canvas id="barcode"></canvas>
+
+    <script>
+        // Your barcode data
+        const barcodeData = "invalid HID event";
+
+        // Generate the barcode
+        JsBarcode("#barcode", barcodeData, {
+            format: "CODE128", // Barcode format
+            lineColor: "#000", // Line color
+            width: 2,          // Width of each barcode line
+            height: 35,       // Height of the barcode
+            displayValue: true // Display the value below the barcode
+        });    
+    </script>
+
+    <div class="layui-btn-container">
+        <button id="download-csv" type="button" class="layui-btn layui-btn-normal layui-btn-radius">Download
+            CSV</button>
+        <button id="download-json" type="button" class="layui-btn layui-btn-normal layui-btn-radius">Download
+            JSON</button>
+        <button id="download-xlsx" type="button" class="layui-btn layui-btn-normal layui-btn-radius">Download
+            XLSX</button>
+        <button id="download-pdf" type="button" class="layui-btn layui-btn-normal layui-btn-radius">Download
+            PDF</button>
+        <button id="download-html" type="button" class="layui-btn layui-btn-normal layui-btn-radius">Download
+            HTML</button>
+        <button id="print" type="button" class="layui-btn layui-btn-normal layui-btn-radius"><i
+                class="layui-icon layui-icon-print"></i>print</button>
+    </div>
+
+    <div class="layui-form layui-form-item  layui-col-space32">
+        <div class="layui-input-inline layui-col-md6">
+            <select id="filter-field" lay-search="">
+                <option></option>
+                <option value="maker">Maker</option>
+                <option value="model">Model</option>
+                <option value="barcode">BarCode</option>
+                <option value="location">Location</option>
+                <option value="esn">ESN</option>
+                <option value="fdmodel">FD_Model</option>
+                <option value="phonenumber">PhoneNumber</option>
+                <option value="marketingname">MarketingName</option>
+                <option value="carrier">Carrier</option>
+                <option value="note">Note</option>
+            </select>
+        </div>
+        <div class="layui-input-inline  layui-col-md6">
+            <select id="filter-type" lay-search="cs">
+                <option value="=">=</option>
+                <option value="<">
+                    < </option>
+                <option value="<=">
+                    <= </option>
+                <option value=">">></option>
+                <option value=">=">>=</option>
+                <option value="!=">!=</option>
+                <option value="like">like</option>
+            </select>
+        </div>
+        <div class="layui-input-inline">
+            <input class="layui-input" id="filter-value" type="text" placeholder="value to filter">
+        </div>
+        <div class="layui-input-inline">
+            <button id="filter-clear" type="button" class="layui-btn layui-btn-normal layui-btn-radius">Clear
+                Filter</button>
+        </div>
+    </div>
+
+
+    <div id="example-table">
+        <div class="layui-panel" style="width: 180px; margin: 16px;">
+            <ul class="layui-menu" id="operation-menu">
+                <li lay-options="{id: 100}">
+                    <div class="layui-menu-body-title"><a href="javascript:;">return device</a></div>
+                </li>
+                <li lay-options="{id: 101}">
+                    <div class="layui-menu-body-title"><a href="javascript:;">broken device</a></div>
+                </li>
+                <li lay-options="{id: 102}">
+                    <div class="layui-menu-body-title"><a href="javascript:;">missing device</a></div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <script type="text/javascript">
+        //sample data
+        /*
+        var tabledata = [
+            { id: 1, name: "Oli Bob", age: "12", col: "red", dob: "12/08/2017" },
+            { id: 2, name: "Mary May", age: "1", col: "blue", dob: "14/05/1982" },
+            { id: 3, name: "Christine Lobowski", age: "42", col: "green", dob: "22/05/1982" },
+            { id: 4, name: "Brendon Philips", age: "125", col: "orange", dob: "01/08/1980" },
+            { id: 5, name: "Margret Marmajuke", age: "16", col: "yellow", dob: "31/01/1999" },
+        ];
+        */
+
+        var rowMenu = [
+            {
+                label: "<i class='fas fa-user'></i> Return Device",
+                action: function (e, row) {
+                    //row.update({ name: "Steve Bobberson" });
+                }
+            },
+            {
+                label: "<i class='fas fa-check-square'></i> Device Broken",
+                action: function (e, row) {
+                    row.select();
+                }
+            },         
+            {
+                label: "<i class='fas fa-check-square'></i> Device Missing",
+                action: function (e, row) {
+                    row.select();
+                }
+            },         
+        ]
+
+        var table = new Tabulator("#example-table", {
+            height: 800, // set height of table to enable virtual DOM
+            rowHeight: 35, //set rows to 40px height
+            //data: tabledata, //load initial data into table
+            ajaxURL: "http://10.10.5.14:8080/devices", //ajax URL
+            printHeader: "<h1>Example Table Header<h1>",
+            printFooter: "<h2>Example Table Footer<h2>",
+
+            layout: "fitColumns", //fit columns to width of table (optional)
+            rowContextMenu: rowMenu,
+            columns: [ //Define Table Columns
+                { formatter: "rownum", hozAlign: "center", width: 50, headerSort: false },
+                {
+                    title: 'Select <br/> All <br/> <input type="checkbox" class="select-all-row" aria-label="select all rows" />',
+                    field: 'IsSelected',
+                    formatter: function (cell, formatterParams, onRendered) {
+                        return `<input type="checkbox" class="select-row" aria-label="select this row" ${cell.getValue() ? 'checked' : ''} />`;
+                    },
+                    width: 50,
+                    headerSort: false,
+                    headerFilter: false,
+                    cssClass: 'text-center',
+                    frozen: true,
+                    tooltips: false,
+                    resizable: false,
+                    cellClick: function (e, cell) {
+                        const element = cell.getElement();
+                        const checkbox = element.querySelector('.select-row');
+
+                        if (cell.getData().IsSelected) {
+                            cell.getRow().deselect();
+                        } else {
+                            cell.getRow().select();
+                        }
+
+                        document.querySelector('.select-all-row').checked = table.getSelectedRows().length === table.getDataCount();
+                        checkbox.checked = !cell.getData().IsSelected;
+                        cell.getData().IsSelected = !cell.getData().IsSelected;
+                    },
+                    headerClick: function (e, column) {
+                        var allNotSelected = table.getSelectedRows().length !== table.getDataCount();
+                        if (allNotSelected) {
+                            table.selectRow();
+                        } else {
+                            table.deselectRow();
+                        }
+
+                        document.querySelectorAll('.select-all-row,.select-row').forEach(checkBox => checkBox.checked = allNotSelected);
+                        table.getRows().forEach(row => row.update({ "IsSelected": allNotSelected }));
+                    },
+                },
+                { title: "Maker", field: "maker", sorter: "string", width: 100 },
+                { title: "Model", field: "model", sorter: "string", width: 100 },
+                { title: "BarCode", field: "barcode", sorter: "string", width: 80 },
+                { title: "Location", field: "location", sorter: "string", width: 150 },
+                { title: "ESN", field: "esn", sorter: "string", width: 150 },
+                { title: "FD_Model", field: "fdmodel", sorter: "string", width: 150 },
+                { title: "PhoneNumber", field: "phonenumber", sorter: "string", width: 150 },
+                { title: "MarketingName", field: "marketingname", sorter: "string", width: 150 },
+                { title: "Carrier", field: "carrier", sorter: "string", width: 100 },
+                { title: "Note", field: "note", sorter: "string", width: 250 },
+            ],            
+        });
+
+        //Define variables for input elements
+        var fieldEl = document.getElementById("filter-field");
+        var typeEl = document.getElementById("filter-type");
+        var valueEl = document.getElementById("filter-value");
+
+        //Trigger setFilter function with correct parameters
+        function updateFilter() {
+            var filterVal = fieldEl.options[fieldEl.selectedIndex].value;
+            var typeVal = typeEl.options[typeEl.selectedIndex].value;
+
+            var filter = filterVal == "function" ? customFilter : filterVal;
+
+            if (filterVal == "function") {
+                typeEl.disabled = true;
+                valueEl.disabled = true;
+            } else {
+                typeEl.disabled = false;
+                valueEl.disabled = false;
+            }
+
+            if (filterVal) {
+                table.setFilter(filter, typeVal, valueEl.value);
+            }
+        }
+
+        //Update filters on value change
+        document.getElementById("filter-field").addEventListener("change", updateFilter);
+        document.getElementById("filter-type").addEventListener("change", updateFilter);
+        document.getElementById("filter-value").addEventListener("keyup", updateFilter);
+
+        //Clear filters on "Clear Filters" button click
+        document.getElementById("filter-clear").addEventListener("click", function () {
+            fieldEl.value = "";
+            typeEl.value = "=";
+            valueEl.value = "";
+
+            table.clearFilter();
+        });
+        //trigger an alert message when the row is clicked
+        table.on("rowClick", function (e, row) {
+            //alert("Row " + row.getIndex() + " Clicked!!!!");
+            alert("Row " + row.getData().model + " Clicked!!!!");
+        });
+        table.on("rowAdded", function (row) {
+            //row - row component
+        });
+        table.on("rowUpdated", function (row) {
+            //row - row component
+        });
+        table.on("rowDeleted", function (row) {
+            //row - row component
+        });
+       
+        //trigger download of data.csv file
+        document.getElementById("download-csv").addEventListener("click", function () {
+            table.download("csv", "data.csv");
+        });
+
+        //trigger download of data.json file
+        document.getElementById("download-json").addEventListener("click", function () {
+            table.download("json", "data.json");
+        });
+
+        //trigger download of data.xlsx file
+        document.getElementById("download-xlsx").addEventListener("click", function () {
+            table.download("xlsx", "data.xlsx", { sheetName: "My Data" });
+        });
+
+        //trigger download of data.pdf file
+        document.getElementById("download-pdf").addEventListener("click", function () {
+            table.download("pdf", "data.pdf", {
+                orientation: "portrait", //set page orientation to portrait
+                title: "Example Report", //add title to report
+            });
+        });
+
+        //trigger download of data.html file
+        document.getElementById("download-html").addEventListener("click", function () {
+            table.download("html", "data.html", { style: true });
+        });
+        document.getElementById("print").addEventListener("click", function () {
+            table.printHeader = "<h1>THIS IS MY COOL TABLE</h1>"; // set header content on printed table
+            table.printFooter = "<h3>THANKS FOR LOOKING AT MY TABLE</h3>"; // set footer content on printed table
+            table.print(true, true);
+        });
+    </script>
+
+</body>
+
+</html>

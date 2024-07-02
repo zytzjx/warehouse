@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login</title>
+  <!-- 请勿在项目正式环境中引用该 layui.css 地址 -->
+  <link href="https://unpkg.com/layui@2.9.13/dist/css/layui.css" rel="stylesheet">
+  <link rel="shortcut icon" href="favicon.ico">
+  <style type="text/css">
+		
+    #login-page:after {
+            content: '';
+            background: url(resources/images/backgrounds.jpg);
+            background-repeat: no-repeat;
+            background-size: cover;
+            -webkit-filter: blur(3px);
+            -moz-filter: blur(3px);
+            -o-filter: blur(3px);
+            -ms-filter: blur(3px);
+            filter: blur(3px);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+    }
+    
+    .logo-title {
+        text-align: center;
+        letter-spacing: 2px;
+        padding: 14px 0;
+    }
+    
+    .logo-title h1{
+        color: #007DDB;
+        font-size: 32px;
+        font-weight: 400;
+    }
+    
+    #login-form {
+        margin-top: 180px;
+        background-color: #fff;
+        border: 1px solid #fff;
+        border-radius: 3px;
+        padding: 14px 20px;
+        box-shadow: 0 0 8px #eeeeee;
+    }
+    
+    #login-form .layui-form-item {
+        position: relative;
+    }
+    
+    #login-form .layui-form-item label {
+        position: absolute;
+        left: 1px;
+        top: 1px;
+        width: 38px;
+        line-height: 36px;
+        text-align: center;
+        color: #d2d2d2;
+    }
+    
+    #login-form .layui-form-item input {
+        padding-left: 36px;
+    }
+    
+    #Captcha {
+        width: 60%;
+        display: inline-block;
+    }
+    
+    .captcha-img {
+        display: inline-block;
+        width: 34%;
+        float: right;
+    }
+    
+    .captcha-img img {
+        height: 34px;
+        border: 1px solid #e6e6e6;
+        height: 36px;
+        width: 100%;
+    }
+    
+</style>
+</head>
+<body class="layui-padding-3">
+
+<style>
+.demo-login-container{width: 640px; margin: 21px auto 0;}
+.demo-login-other .layui-icon{position: relative; display: inline-block; margin: 0 2px; top: 2px; font-size: 26px;}
+</style>
+<form class="layui-form">
+  <div class="demo-login-container">
+    <div class="layui-form-item logo-title">
+        <h1>Future Dial Warehouse Management</h1>
+    </div>
+    <div class="layui-form-item">
+      <div class="layui-input-wrap">
+        <div class="layui-input-prefix">
+          <i class="layui-icon layui-icon-username"></i>
+        </div>
+        <input type="text" name="username" value="" lay-verify="required" placeholder="UserName" lay-reqtext="EMail" autocomplete="off" class="layui-input" lay-affix="clear">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <div class="layui-input-wrap">
+        <div class="layui-input-prefix">
+          <i class="layui-icon layui-icon-password"></i>
+        </div>
+        <input type="password" name="password" value="" lay-verify="required" placeholder="Password" lay-reqtext="Password" autocomplete="off" class="layui-input" lay-affix="eye">
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <div class="layui-row">
+        <div class="layui-col-xs7">
+          <div class="layui-input-wrap">
+            <div class="layui-input-prefix">
+              <i class="layui-icon layui-icon-vercode"></i>
+            </div>
+            <input type="text" name="captcha" value="" lay-verify="required" placeholder="验证码" lay-reqtext="请填写验证码" autocomplete="off" class="layui-input" lay-affix="clear">
+          </div>
+        </div>
+        <div class="layui-col-xs5">
+          <div style="margin-left: 10px;">
+            <img src="https://www.oschina.net/action/user/captcha" onclick="this.src='https://www.oschina.net/action/user/captcha?t='+ new Date().getTime();">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <input type="checkbox" name="remember" lay-skin="primary" title="Remember password">
+      <a href="#forget" style="float: right; margin-top: 7px;">forget password?</a>
+    </div>
+    <div class="layui-form-item">
+      <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="fd-login">Login</button>
+    </div>
+    <div class="layui-form-item demo-login-other">     
+       <a href="#reg">Register</a>
+    </div>
+  </div>
+</form>
+  
+<!-- 请勿在项目正式环境中引用该 layui.js 地址 -->
+<script src="https://unpkg.com/layui@2.9.13/dist/layui.js"></script> 
+<script>
+layui.use(function(){
+  var form = layui.form;
+  var layer = layui.layer;
+  // 提交事件
+  form.on('submit(fd-login)', function(data){
+    var field = data.field; // 获取表单字段值
+    // 显示填写结果，仅作演示用
+    layer.alert(JSON.stringify(field), {
+      title: '当前填写的字段值'
+    });
+    // 此处可执行 Ajax 等操作
+    $.ajax({
+        url: 'http://10.10.5.14:8080/index.html',
+        data: field,
+        type: 'POST',
+        datatype: 'json',
+        cache: false,
+        success: function(data) {
+            data = JSON.parse(data);
+            layer.alert(JSON.stringify(data), {
+                title: 'return data'
+            });
+        }
+    });
+    return true; // false 阻止默认 form 跳转
+  });
+});
+</script>
+
+
+</body>
+</html>
