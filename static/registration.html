@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<title>Registration</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				background-color: #f3f3f3;
+				margin: 0;
+				padding: 0;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 100vh;
+			}
+
+			.main {
+				background-color: #fff;
+				border-radius: 15px;
+				box-shadow: 0 0 20px
+					rgba(0, 0, 0, 0.2);
+				padding: 20px;
+				width: 600px;
+			}
+
+			.main h2 {
+				color: #4caf50;
+				margin-bottom: 20px;
+			}
+		.flex-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+		.label-auto-width {
+            display: inline-block;
+        }
+		.label-no-wrap {
+            white-space: nowrap; /* Prevents text from wrapping */
+            overflow: hidden; /* Ensures content fits within the container */
+            /*text-overflow: ellipsis;  Adds an ellipsis if content is too long */
+        }
+		</style>
+		<link href="https://unpkg.com/layui@2.9.13/dist/css/layui.css" rel="stylesheet">
+		<script src="https://unpkg.com/layui@2.9.13/dist/layui.js"></script>
+	</head>
+
+	<body>
+		<div class="main">
+		    <div class="layui-form-item logo-title">
+				<h2 style="text-align: center;">Registration</h2>
+			</div>
+			<form  class="layui-form layui-form-pane1">
+			<div class="layui-form-item">
+				<label class="layui-form-label">First Name<span style="color:red">*</span>:</label>
+				<div class="layui-input-block">
+					<input class="layui-input" type="text" id="firstname" name="firstname" required/>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">Last Name:</label>
+				<div class="layui-input-block">
+				<input  class="layui-input" type="text" id="lastname" name="lastname" />
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">Email<span style="color:red">*</span>:</label>
+				<div class="layui-input-block">
+					<div class="layui-input-wrap">
+						<div class="layui-input-prefix">
+						  <i class="layui-icon layui-icon-email"></i>
+						</div>
+						<input  class="layui-input" type="email" id="email" lay-verify="required|email" name="email" required/>
+					</div>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">Password<span style="color:red">*</span>:</label>
+				<div class="layui-input-block">
+					<div class="layui-input-wrap">
+						<div class="layui-input-prefix">
+						  <i class="layui-icon layui-icon-password"></i>
+						</div>
+						<input type="password" name="password" value="" lay-verify="required" placeholder="Password" autocomplete="off" class="layui-input" id="password" lay-affix="eye" 
+							pattern="^(?=.*\d)(?=.*[a-zA-Z])(?=.*[^a-zA-Z0-9])\S{4,}$" title="Password must contain at least one number, 
+							one alphabet, one symbol, and be at 
+							least 4 characters long"
+							required>
+					  </div>
+					<!--input class="layui-input" 
+						type="password"
+						id="password"
+						name="password"
+						pattern="^(?=.*\d)(?=.*[a-zA-Z])(?=.*[^a-zA-Z0-9])\S{4,}$"
+						title="Password must contain at least one number, 
+							one alphabet, one symbol, and be at 
+							least 4 characters long"
+						required
+					/-->
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">Re-type Password<span style="color:red">*</span>:</label>
+				<div class="layui-input-block">
+					<div class="layui-input-wrap">
+						<div class="layui-input-prefix">
+						  <i class="layui-icon layui-icon-password"></i>
+						</div>
+						<input type="password" id="confirmPassword" value="" lay-verify="required|confirmPassword" placeholder="confirm password" autocomplete="off" class="layui-input" lay-affix="eye">
+					</div>
+					<!--input class="layui-input" 
+						type="password"
+						id="repassword"
+						name="repassword"
+						required
+					/-->
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<label class="layui-form-label">Title:</label>
+				<div class="layui-input-block">
+					<input class="layui-input"  type="text" id="title" name="title"/>
+				</div>
+			</div>
+			<div class="layui-form-item">
+			<div class="flex-container">
+				<button class="layui-btn" lay-submit lay-filter="Registration">Registration</button>
+				<a href="/login" style="color:#00f">I&nbsp;have&nbsp;an&nbsp;account</a>
+				<!--label class="layui-form-label label-auto-width"><a href="https://www.w3schools.com">I&nbsp;have&nbsp;an&nbsp;account</label-->
+			</div>
+				</div>
+			</form>
+		</div>
+		<script>
+			layui.use('form', function(){
+			var $ = layui.$;
+			var form = layui.form;
+			// 自定义验证规则
+				form.verify({
+					// 确认密码
+					confirmPassword: function(value, item){
+						var passwordValue = $('#password').val();
+						if(value !== passwordValue){
+							return 'Password is different';
+						}
+					}
+				});			
+				//提交
+				form.on('submit(Registration)', function(data){
+					jsonData = JSON.stringify(data.field);
+					console.info(jsonData);
+					jqxhr = $.post("/signup", jsonData, (data, status) => {
+						console.log(data);
+
+					});
+					jqxhr.done(function(result) {
+						layer.msg("register success");
+						window.location.href =  "/login";
+					});
+					jqxhr.fail(function() {
+						alert("Return Device Request failed");
+					});
+					return false;
+				});
+			});			
+		</script>
+	</body>
+</html>

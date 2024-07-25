@@ -21,7 +21,7 @@
 
     <script>
         // Your barcode data
-        const barcodeData = "invalid HID event";
+        const barcodeData = "Design by Jeffery";
 
         // Generate the barcode
         JsBarcode("#barcode", barcodeData, {
@@ -46,6 +46,8 @@
             HTML</button>
         <button id="print" type="button" class="layui-btn layui-btn-normal layui-btn-radius"><i
                 class="layui-icon layui-icon-print"></i>print</button>
+        <button id="logout" style="float:right" type="button" onclick="window.location.href = '/logout';"
+                 class="layui-btn layui-btn-normal layui-btn-radius">Logout</button>
     </div>
 
     <div class="layui-form layui-form-item  layui-col-space32">
@@ -56,6 +58,7 @@
                 <option value="model">Model</option>
                 <option value="barcode">BarCode</option>
                 <option value="location">Location</option>
+                <option value="borrower">Borrower</option>
                 <option value="esn">ESN</option>
                 <option value="fdmodel">FD_Model</option>
                 <option value="phonenumber">PhoneNumber</option>
@@ -84,24 +87,13 @@
             <button id="filter-clear" type="button" class="layui-btn layui-btn-normal layui-btn-radius">Clear
                 Filter</button>
         </div>
-    </div>
-
-
-    <div id="example-table">
-        <div class="layui-panel" style="width: 180px; margin: 16px;">
-            <ul class="layui-menu" id="operation-menu">
-                <li lay-options="{id: 100}">
-                    <div class="layui-menu-body-title"><a href="javascript:;">return device</a></div>
-                </li>
-                <li lay-options="{id: 101}">
-                    <div class="layui-menu-body-title"><a href="javascript:;">broken device</a></div>
-                </li>
-                <li lay-options="{id: 102}">
-                    <div class="layui-menu-body-title"><a href="javascript:;">missing device</a></div>
-                </li>
-            </ul>
+        <div class="layui-input-inline">
+            <label class="layui-form-label" style="padding-left: 400 px"><span id="search_count"></span> results in total <span id="total_count"></label>
         </div>
     </div>
+
+
+    <div id="devices-table"></div>
     <script type="text/javascript">
         //sample data
         /*
@@ -114,29 +106,9 @@
         ];
         */
 
-        var rowMenu = [
-            {
-                label: "<i class='fas fa-user'></i> Return Device",
-                action: function (e, row) {
-                    //row.update({ name: "Steve Bobberson" });
-                }
-            },
-            {
-                label: "<i class='fas fa-check-square'></i> Device Broken",
-                action: function (e, row) {
-                    row.select();
-                }
-            },         
-            {
-                label: "<i class='fas fa-check-square'></i> Device Missing",
-                action: function (e, row) {
-                    row.select();
-                }
-            },         
-        ]
-
-        var table = new Tabulator("#example-table", {
-            height: 800, // set height of table to enable virtual DOM
+ 
+        var table = new Tabulator("#devices-table", {
+            maxHeight:"80%",  // set height of table to enable virtual DOM
             rowHeight: 35, //set rows to 40px height
             //data: tabledata, //load initial data into table
             ajaxURL: "http://10.10.5.14:8080/devices", //ajax URL
@@ -144,7 +116,6 @@
             printFooter: "<h2>Example Table Footer<h2>",
 
             layout: "fitColumns", //fit columns to width of table (optional)
-            rowContextMenu: rowMenu,
             columns: [ //Define Table Columns
                 { formatter: "rownum", hozAlign: "center", width: 50, headerSort: false },
                 {
@@ -186,16 +157,18 @@
                         table.getRows().forEach(row => row.update({ "IsSelected": allNotSelected }));
                     },
                 },
+                { title: "ID", field: "id", visible:false},
                 { title: "Maker", field: "maker", sorter: "string", width: 100 },
                 { title: "Model", field: "model", sorter: "string", width: 100 },
                 { title: "BarCode", field: "barcode", sorter: "string", width: 80 },
                 { title: "Location", field: "location", sorter: "string", width: 150 },
+                { title: "Borrower", field: "borrower", sorter: "string", width: 150 },
                 { title: "ESN", field: "esn", sorter: "string", width: 150 },
                 { title: "FD_Model", field: "fdmodel", sorter: "string", width: 150 },
                 { title: "PhoneNumber", field: "phonenumber", sorter: "string", width: 150 },
                 { title: "MarketingName", field: "marketingname", sorter: "string", width: 150 },
                 { title: "Carrier", field: "carrier", sorter: "string", width: 100 },
-                { title: "Note", field: "note", sorter: "string", width: 250 },
+                { title: "Note", field: "note", sorter: "string" },
             ],            
         });
 
@@ -240,7 +213,16 @@
         //trigger an alert message when the row is clicked
         table.on("rowClick", function (e, row) {
             //alert("Row " + row.getIndex() + " Clicked!!!!");
-            alert("Row " + row.getData().model + " Clicked!!!!");
+            //alert("Row " + row.getData().model + " Clicked!!!!");
+            var rowElement = row.getElement();
+            const checkbox = rowElement.querySelector('.select-row');
+            checkbox.checked = !checkbox.checked;
+            if(checkbox.checked){
+                row.select();
+            } else {
+                row.deselect();
+                        }
+
         });
         table.on("rowAdded", function (row) {
             //row - row component
@@ -251,7 +233,18 @@
         table.on("rowDeleted", function (row) {
             //row - row component
         });
-       
+       //subscribe to event
+table.on("dataLoaded", function(data){
+  //data has been loaded
+  var el = document.getElementById("total_count");
+  el.innerHTML = data.length;
+});
+table.on("dataFiltered", function(filters, rows){
+    //filters - array of filters currently applied
+    //rows - array of row components that pass the filters
+    var el = document.getElementById("search_count");
+    el.innerHTML = rows.length;
+});
         //trigger download of data.csv file
         document.getElementById("download-csv").addEventListener("click", function () {
             table.download("csv", "data.csv");
